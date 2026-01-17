@@ -1,14 +1,20 @@
-import cors from 'cors'
-import dotenv from 'dotenv'
 import express from 'express'
-
-dotenv.config()
+import sequelize from './connectionDB.js'
+import User from './models/User.js'
 
 const app = express()
-app.use(cors())
 app.use(express.json())
 
-const PORT = process.env.PORT
-app.listen(PORT, () => {
-	console.log(`Server ishlayapti: http://localhost:${PORT}`)
+await sequelize.authenticate()
+console.log('DB connected')
+
+await sequelize.sync()
+
+app.get('/users', async (req, res) => {
+	const users = await User.findAll()
+	res.json(users)
+})
+
+app.listen(7777, () => {
+	console.log('Server ishlayapti: http://localhost:7777')
 })

@@ -1,15 +1,18 @@
 import dotenv from 'dotenv'
-import { Pool } from 'pg'
+import { Sequelize } from 'sequelize'
+
 dotenv.config()
 
-export const pool = new Pool({
-	connectionString: process.env.DB_CONNECTION,
-	ssl: {
-		rejectUnauthorized: true,
+const sequelize = new Sequelize(process.env.DB_CONNECTION, {
+	dialect: 'postgres',
+	protocol: 'postgres',
+	logging: false,
+	dialectOptions: {
+		ssl: {
+			require: true,
+			rejectUnauthorized: false,
+		},
 	},
 })
 
-pool
-	.connect()
-	.then(() => console.log('DB Ulandik'))
-	.catch(err => console.error(err))
+export default sequelize
