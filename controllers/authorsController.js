@@ -1,18 +1,20 @@
-import pool from "../connectionDB.js";
+import {
+  getAllAuthors,
+  createAuthorModel,
+  deleteAuthorModel,
+  updateAuthorModel,
+} from "../models/authorsModel.js";
 
 /**
  * GET /authors
  */
 export const getAuthors = async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT id, name FROM authors ORDER BY id ASC",
-    );
-
-    res.status(200).json(result.rows);
+    const authors = await getAllAuthors();
+    res.status(200).json(authors);
   } catch (error) {
     res.status(500).json({
-      message: "Hamma avtor olishda hatolik",
+      message: "Avtor olishda hatolik",
       error: error.message,
     });
   }
@@ -26,23 +28,14 @@ export const createAuthor = async (req, res) => {
     const { name } = req.body;
 
     if (!name || name.trim() === "") {
-      return res.status(400).json({
-        message: "Поле name shart",
-      });
+      return res.status(400).json({ message: "Поле name shart!" });
     }
 
-    const result = await pool.query(
-      "INSERT INTO authors (name) VALUES ($1) RETURNING id, name",
-      [name.trim()],
-    );
-
-    res.status(201).json({
-      message: "Avtor muafaqiyatli koshildi",
-      author: result.rows[0],
-    });
+    const author = await createAuthorModel(name);
+    res.status(201).json({ message: "Avtor создан", author });
   } catch (error) {
     res.status(500).json({
-      message: "Avtor создать kilishda hatolik",
+      message: "Hatolik avtor olishda",
       error: error.message,
     });
   }
@@ -50,30 +43,51 @@ export const createAuthor = async (req, res) => {
 
 /**
  * DELETE /authors/:id
- 
  */
 export const deleteAuthor = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      "DELETE FROM authors WHERE id = $1 RETURNING id",
-      [id],
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        message: "Avtor topilmadi",
-      });
+    const deletedCount = await deleteAuthorModel(id);
+    if (deletedCount === 0) {
+      return res.status(404).json({ message: "Avtor topilmad" });
     }
 
-    res.status(200).json({
-      message: "Avtor ochirild",
-    });
+    res.status(200).json({ message: "Avtor ochirild" });
   } catch (error) {
-    res.status(500).json({
-      message: "Avtor ochirishda hatolik ",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        message: "Avtor qabul kivolishda hatolik ",
+        error: error.message,
+      });
+  }
+};
+
+/**
+ * PUT /authors/:id
+ */
+export const updateAuthor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ message: "Поле name shart!" });
+    }
+
+    const updatedAuthor = await updateAuthorModel(id, name);
+    if (!updatedAuthor) {
+      return res.status(404).json({ message: "Avtor topilmad" });
+    }
+
+    res.status(200).json({ message: "Avtor обнавлен", author: updatedAuthor });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Avtor обновить kilishda hatolik",
+        error: error.message,
+      });
   }
 };
