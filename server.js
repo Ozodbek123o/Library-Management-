@@ -15,6 +15,21 @@ app.get('/users', async (req, res) => {
 	res.json(users)
 })
 
+app.post('/users', async (req, res) => {
+	const user = await User.create(req.body)
+	res.status(201).json(user)
+})
+
+app.get('/users/:id', async (req, res) => {
+	const user = await User.findByPk(req.params.id)
+	res.json(user)
+})
+
+app.delete('/users/:id', async (req, res) => {
+	await User.destroy({ where: { id: req.params.id } })
+	res.json({ message: 'User deleted' })
+})
+
 app.listen(7777, () => {
 	console.log('Server ishlayapti: http://localhost:7777')
 })
